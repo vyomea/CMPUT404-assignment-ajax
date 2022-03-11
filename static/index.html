@@ -22,14 +22,16 @@
     "/>
     <script src="json2.js"></script>
   </head> 
-  <body bgcolor="black" height="100%" width="100%"> 
+  <body bgcolor="black" height="100%" width="100%" background="background.jpg"> 
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
+    
     <script>
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
+// document.body.style.backgroundImage = "url(background.jpg')"; 
 
 
 function sendJSONXMLHTTPRequest(url, objects, callback) {
@@ -49,13 +51,16 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
+
+
     //XXX: POST to a URL
     xhr.open("POST", url)
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
+    // //XXX: set the mimetype and the accept headers!
+    // // Remember to use application/json !
+    xhr.overrideMimeType("application/json");
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.setRequestHeader("Accept", "application/json")
-    xhr.send(objects)
+    xhr.send(JSON.stringify(objects))
 }
 
 
@@ -65,13 +70,13 @@ world = {};
 function drawCircle(context,entity) {
     with(context) {
         beginPath();              
-        lineWidth = 3;
+        lineWidth = 10;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:30, 0, 2.0 * Math.PI, false);  
         stroke();                                
     }
 }
@@ -97,7 +102,7 @@ function clearFrame() {
 
 // This actually draws the frame
 function renderFrame() {
-    clearFrame();
+    // clearFrame();
     for (var key in world) {
         var entity = world[key];
         drawCircle(context,prepEntity(entity));
@@ -144,7 +149,7 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    sendJSONXMLHTTPRequest("http://127.0.0.1/entity/${entity}", JSON.stringify(data))
+    sendJSONXMLHTTPRequest("/entity/" + entity, data, ()=> {});
 
 }
 
@@ -254,24 +259,27 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'white'});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'orange'});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'pink',
+                          'radius':40});
 });
 
+function send_callback(world2) {
+    world = world2;
+    drawNextFrame();
+    drawFrame();
+}
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    drawFrame();
-    sendJSONXMLHTTPRequest("https://127.0.0.1:5000/world", null, (world2)=> {word = world2;})
-    drawNextFrame()
+    sendJSONXMLHTTPRequest("/world", null, send_callback);
 }
 
 // 30 frames per second
