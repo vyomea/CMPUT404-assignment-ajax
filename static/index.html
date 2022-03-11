@@ -52,15 +52,35 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
         }
     };
 
+    var method = "";
+    var send = true;
+    var body;
+
+    // Doesn’t POST to /world to retrieve world.
+    if (url.substring(url.length - 6) == "/world") {
+        method = "GET";
+        send = false;
+        body = "";
+    }
+    else {
+        method = "POST";
+        body = JSON.stringify(objects);
+    }
 
     //XXX: POST to a URL
-    xhr.open("POST", url)
+    xhr.open(method, url)
     // //XXX: set the mimetype and the accept headers!
     // // Remember to use application/json !
-    xhr.overrideMimeType("application/json");
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.setRequestHeader("Accept", "application/json")
-    xhr.send(JSON.stringify(objects))
+    xhr.send(body)
+    // if (send) {
+    //     xhr.send(JSON.stringify(objects))
+    // }
+    // else {
+    //     send
+    // }
+    
 }
 
 
